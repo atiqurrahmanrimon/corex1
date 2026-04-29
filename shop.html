@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreX - Shop All Products</title>
+    <meta name="description" content="Browse all CoreX products — smart lamps, watches, fans, and accessories. Sort by popularity, price, and more.">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            padding-top: 70px;
+        }
+
+        /* ── Hero ────────────────────────────────────────────── */
+        .shop-hero {
+            text-align: center;
+            padding: 70px 20px 50px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(41,151,255,0.12) 0%, transparent 70%);
+            border-bottom: 1px solid #111;
+        }
+        .shop-hero h1 {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 700;
+            letter-spacing: -2px;
+            margin-bottom: 12px;
+        }
+        .shop-hero p {
+            color: #888;
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* ── Controls Bar ────────────────────────────────────── */
+        .controls {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Category chips */
+        .cat-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .chip {
+            background: #111;
+            border: 1px solid #222;
+            color: #888;
+            padding: 8px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .chip:hover { border-color: #555; color: #fff; }
+        .chip.active { background: #2997ff; border-color: #2997ff; color: #fff; }
+
+        /* Sort + count row */
+        .sort-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .product-count { color: #555; font-size: 0.9rem; }
+        .sort-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sort-label { color: #666; font-size: 0.85rem; }
+        .sort-select {
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            padding-right: 30px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+        .sort-select:focus { outline: none; border-color: #2997ff; }
+        .sort-select option { background: #1a1a1a; }
+
+        /* ── Product Grid ─────────────────────────────────────── */
+        .shop-grid-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 80px;
+        }
+
+        /* Badge overlay on cards */
+        .catalog-item { position: relative; }
+        .pop-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: linear-gradient(135deg, #ff6b35, #ff3b30);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            z-index: 1;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .pop-badge.trending { background: linear-gradient(135deg, #ff6b35, #ff3b30); }
+        .pop-badge.popular  { background: linear-gradient(135deg, #2997ff, #5e35ff); }
+        .pop-badge.new      { background: linear-gradient(135deg, #34c759, #00b341); }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #444;
+        }
+        .empty-state h3 { font-size: 1.5rem; margin-bottom: 10px; }
+
+        /* Search bar */
+        .search-wrap {
+            position: relative;
+            flex-grow: 1;
+            max-width: 340px;
+        }
+        .search-wrap input {
+            width: 100%;
+            background: #111;
+            border: 1px solid #222;
+            color: #fff;
+            padding: 9px 14px 9px 36px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+        .search-wrap input::placeholder { color: #555; }
+        .search-wrap input:focus { outline: none; border-color: #2997ff; }
+        .search-icon {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        @media (max-width: 600px) {
+            .sort-row { flex-direction: column; align-items: flex-start; }
+            .search-wrap { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html" class="logo"><img src="assets/images/logo.png" alt="CoreX" style="height: 35px; width: auto; display: block;"></a>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+            <ul class="nav-links">
+                <li><a href="shop.html" style="color: #2997ff;">Shop All</a></li>
+                <li><a href="lamp.html">Lamps</a></li>
+                <li><a href="watch.html">Watches</a></li>
+                <li><a href="fan.html">Fans</a></li>
+                <li><a href="accessories.html">Accessories</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="shop-hero">
+        <h1>Shop All</h1>
+        <p>Everything CoreX makes. Sorted by what people love most.</p>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <div class="cat-chips" id="catChips">
+            <button class="chip active" data-cat="all">All</button>
+            <button class="chip" data-cat="lamp">💡 Lamps</button>
+            <button class="chip" data-cat="watch">⌚ Watches</button>
+            <button class="chip" data-cat="fan">🌀 Fans</button>
+            <button class="chip" data-cat="accessories">🎒 Accessories</button>
+        </div>
+
+        <div class="sort-row">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <span class="product-count" id="productCount">Loading...</span>
+                <div class="search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Search products...">
+                </div>
+            </div>
+            <div class="sort-group">
+                <span class="sort-label">Sort by</span>
+                <select class="sort-select" id="sortSelect">
+                    <option value="popularity">🔥 Popularity</option>
+                    <option value="price-asc">Price: Low → High</option>
+                    <option value="price-desc">Price: High → Low</option>
+                    <option value="name-asc">Name: A → Z</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="shop-grid-wrapper">
+        <div class="catalog-grid" id="shopGrid"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content" style="flex-direction: column; gap: 20px;">
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                <a href="https://www.facebook.com/corexgadgetbd" target="_blank" style="color: #888; text-decoration: none; transition: 0.3s;" onmouseover="this.style.color='#2997ff'" onmouseout="this.style.color='#888'">Facebook</a>
+                <a href="https://www.instagram.com/corexgadgetbd/" target="_blank" style="color: #888; text-decoration: none; transition: 0.3s;" onmouseover="this.style.color='#2997ff'" onmouseout="this.style.color='#888'">Instagram</a>
+                <a href="https://wa.me/message/WZT3SOUAI46SD1" target="_blank" style="color: #888; text-decoration: none; transition: 0.3s;" onmouseover="this.style.color='#2997ff'" onmouseout="this.style.color='#888'">WhatsApp</a>
+                <a href="mailto:corexgadgetbd@gmail.com" style="color: #888; text-decoration: none; transition: 0.3s;" onmouseover="this.style.color='#2997ff'" onmouseout="this.style.color='#888'">corexgadgetbd@gmail.com</a>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-top: 1px solid #333; padding-top: 20px; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <img src="assets/images/logo.png" alt="CoreX" style="height: 25px; width: auto; opacity: 0.8;">
+                    <p style="margin: 0;">&copy; 2026 CoreX Inc. All rights reserved.</p>
+                </div>
+                <ul class="footer-links" style="margin: 0;">
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="terms.html">Terms of Use</a></li>
+                    <li><a href="sales.html">Sales Policy</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="index.html" class="bottom-nav-item">
+            <span style="font-size: 1.5rem;">🏠</span>
+            <span>Home</span>
+        </a>
+        <a href="shop.html" class="bottom-nav-item active">
+            <span style="font-size: 1.5rem;">🛍️</span>
+            <span>Shop</span>
+        </a>
+        <a href="order.html" class="bottom-nav-item">
+            <span style="font-size: 1.5rem;">📦</span>
+            <span>Track</span>
+        </a>
+        <a href="javascript:void(0)" class="bottom-nav-item" onclick="cart.toggle()">
+            <span style="position:relative; font-size: 1.5rem;">🛒<span class="cart-badge" id="mobileCartCount">0</span></span>
+            <span>Cart</span>
+        </a>
+    </div>
+
+    <script src="assets/js/products.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('shopGrid');
+            const countEl = document.getElementById('productCount');
+            const sortSelect = document.getElementById('sortSelect');
+            const searchInput = document.getElementById('searchInput');
+            const catChips = document.getElementById('catChips');
+
+            // Read view counts from localStorage
+            const views = JSON.parse(localStorage.getItem('corex_views')) || {};
+
+            let activeCategory = 'all';
+            let searchQuery = '';
+            let sortMode = 'popularity';
+
+            // ── Category chips ──────────────────────────────────────
+            catChips.addEventListener('click', (e) => {
+                const chip = e.target.closest('.chip');
+                if (!chip) return;
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                activeCategory = chip.dataset.cat;
+                render();
+            });
+
+            // ── Sort ────────────────────────────────────────────────
+            sortSelect.addEventListener('change', () => {
+                sortMode = sortSelect.value;
+                render();
+            });
+
+            // ── Search ──────────────────────────────────────────────
+            searchInput.addEventListener('input', () => {
+                searchQuery = searchInput.value.toLowerCase().trim();
+                render();
+            });
+
+            // ── Render ──────────────────────────────────────────────
+            function render() {
+                grid.innerHTML = '';
+
+                // 1. Filter
+                let entries = Object.entries(productDatabase);
+                if (activeCategory !== 'all') {
+                    entries = entries.filter(([, p]) => p.category === activeCategory);
+                }
+                if (searchQuery) {
+                    entries = entries.filter(([, p]) =>
+                        p.name.toLowerCase().includes(searchQuery) ||
+                        (p.desc && p.desc.toLowerCase().includes(searchQuery))
+                    );
+                }
+
+                // 2. Sort
+                entries.sort(([keyA, a], [keyB, b]) => {
+                    if (sortMode === 'popularity') {
+                        return (views[keyB] || 0) - (views[keyA] || 0);
+                    } else if (sortMode === 'price-asc') {
+                        return a.price - b.price;
+                    } else if (sortMode === 'price-desc') {
+                        return b.price - a.price;
+                    } else if (sortMode === 'name-asc') {
+                        return a.name.localeCompare(b.name);
+                    }
+                    return 0;
+                });
+
+                // 3. Update count
+                countEl.textContent = `${entries.length} product${entries.length !== 1 ? 's' : ''}`;
+
+                // 4. Empty state
+                if (entries.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-state" style="grid-column:1/-1">
+                            <h3>No products found</h3>
+                            <p>Try a different category or search term.</p>
+                        </div>`;
+                    return;
+                }
+
+                // 5. Build cards with badges
+                // Determine popularity ranks
+                const popularityRanked = Object.entries(productDatabase)
+                    .sort(([kA], [kB]) => (views[kB] || 0) - (views[kA] || 0));
+                const top3 = new Set(popularityRanked.slice(0, 3).map(([k]) => k));
+                const top10 = new Set(popularityRanked.slice(0, 10).map(([k]) => k));
+
+                entries.forEach(([key, prod], index) => {
+                    const delay = (index % 4) * 0.05;
+                    const item = document.createElement('div');
+                    item.className = 'catalog-item fade-in visible';
+                    item.style.transitionDelay = delay + 's';
+                    item.style.position = 'relative';
+
+                    // Badge logic
+                    let badge = '';
+                    const viewCount = views[key] || 0;
+                    if (sortMode === 'popularity' && top3.has(key) && viewCount > 0) {
+                        badge = `<div class="pop-badge trending">🔥 Trending</div>`;
+                    } else if (sortMode === 'popularity' && top10.has(key) && viewCount > 0) {
+                        badge = `<div class="pop-badge popular">⭐ Popular</div>`;
+                    }
+
+                    const variantParam = prod.variant ? '&variant=' + prod.variant : '';
+                    const safeName = encodeURIComponent(prod.name);
+                    const shortDesc = prod.desc.length > 60 ? prod.desc.substring(0, 57) + '...' : prod.desc;
+                    const viewText = viewCount > 0
+                        ? `<span style="color:#555; font-size:0.75rem; margin-left:6px;">${viewCount} view${viewCount !== 1 ? 's' : ''}</span>`
+                        : '';
+
+                    item.innerHTML = `
+                        ${badge}
+                        <a href="product.html?id=${key}" style="text-decoration: none;">
+                            <img src="${prod.img}" alt="${prod.name}">
+                            <h3>${prod.name}</h3>
+                        </a>
+                        <p>${shortDesc}</p>
+                        <div class="catalog-price">${prod.price.toLocaleString()} ৳${viewText}</div>
+                        <div class="catalog-buttons">
+                            <button class="catalog-add-cart" onclick="cart.add('${prod.name.replace(/'/g, "\\'")}', ${prod.price}, '${prod.img}', '${prod.variant || ''}')">Add to Cart</button>
+                            <a href="order.html?product=${safeName}&price=${prod.price}&img=${encodeURIComponent(prod.img)}${variantParam}" class="catalog-buy">Buy Now</a>
+                        </div>
+                    `;
+                    grid.appendChild(item);
+                });
+            }
+
+            render();
+        });
+    </script>
+</body>
+</html>
