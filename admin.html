@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreX Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #000; color: #fff; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+        h1 { color: #2997ff; text-align: center; font-weight: 600; margin-bottom: 10px; font-size: 2rem; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 30px; }
+
+        .btn { background-color: #2997ff; color: #fff; border: none; padding: 11px 22px; border-radius: 8px; font-size: 0.95rem; cursor: pointer; transition: 0.2s; font-weight: 500; font-family: 'Inter', sans-serif; }
+        .btn:hover { background-color: #1a7fe0; }
+        .btn-danger { background-color: #ff3b30; }
+        .btn-danger:hover { background-color: #d12c23; }
+        .btn-secondary { background-color: #333; }
+        .btn-secondary:hover { background-color: #444; }
+        .btn-success { background-color: #34c759; }
+        .btn-success:hover { background-color: #28a745; }
+
+        /* Auth Screen */
+        #authSection { text-align: center; padding: 120px 20px; }
+        #authSection p { color: #888; font-size: 1.05rem; line-height: 1.7; margin-bottom: 30px; max-width: 500px; margin-left: auto; margin-right: auto; }
+        #authSection .btn { font-size: 1.1rem; padding: 14px 32px; }
+
+        /* Dashboard */
+        #dashboard { display: none; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        .dash-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        /* Status bar */
+        .status-bar { background: #111; border: 1px solid #333; border-radius: 8px; padding: 10px 16px; margin-bottom: 24px; font-size: 0.85rem; color: #888; display: flex; align-items: center; gap: 8px; }
+        .status-bar .dot { width: 8px; height: 8px; border-radius: 50%; background: #34c759; flex-shrink: 0; }
+
+        /* Category Tabs */
+        .cat-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+        .cat-tab { background: #111; border: 1px solid #333; color: #888; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-family: 'Inter', sans-serif; transition: 0.2s; }
+        .cat-tab:hover { border-color: #555; color: #fff; }
+        .cat-tab.active { background: #2997ff; border-color: #2997ff; color: #fff; }
+
+        /* Product Grid */
+        .product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .product-card { background: #111; border: 1px solid #222; padding: 18px; border-radius: 12px; position: relative; transition: border-color 0.2s; }
+        .product-card:hover { border-color: #444; }
+        .product-card img { width: 100%; height: 180px; object-fit: contain; background: #000; border-radius: 8px; margin-bottom: 14px; }
+        .product-card h3 { font-size: 1rem; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-card .meta { color: #666; font-size: 0.85rem; margin-bottom: 14px; }
+        .product-card .price { color: #2997ff; font-weight: 600; font-size: 1rem; }
+        .product-actions { display: flex; gap: 8px; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: #111; width: 100%; max-width: 580px; max-height: 92vh; overflow-y: auto; padding: 30px; border-radius: 16px; border: 1px solid #333; }
+        .modal-content h2 { margin-bottom: 24px; color: #fff; font-size: 1.4rem; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #aaa; font-size: 0.85rem; font-weight: 500; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 11px 14px; background: #1a1a1a; border: 1px solid #333; color: #fff;
+            border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.95rem; transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #2997ff; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-group select option { background: #1a1a1a; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .img-upload-box { background: #0a0a0a; border: 1px dashed #444; border-radius: 10px; padding: 16px; }
+        .img-upload-box label { color: #2997ff; margin-bottom: 8px; }
+        .img-preview { width: 100%; height: 140px; object-fit: contain; background: #000; border-radius: 8px; margin-bottom: 10px; display: none; }
+        .form-group input[type="file"] { background: transparent; border: none; padding: 0; cursor: pointer; color: #888; }
+        .hint { font-size: 0.78rem; color: #555; margin-top: 4px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #222; }
+
+        /* Error text */
+        .error-msg { color: #ff3b30; font-size: 0.82rem; margin-top: 4px; display: none; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1c1c1e; border: 1px solid #333; color: #fff; padding: 14px 24px; border-radius: 10px; font-size: 0.9rem; transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); z-index: 999; white-space: nowrap; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { border-color: #34c759; color: #34c759; }
+        .toast.error { border-color: #ff3b30; color: #ff3b30; }
+    </style>
+</head>
+<body>
+
+    <!-- Auth Screen -->
+    <div class="container" id="authSection">
+        <h1>CoreX Admin</h1>
+        <p>To manage your store, click below and select your website's main folder (<strong>Ai 1</strong>). This lets the dashboard read and save your products and images directly.</p>
+        <button class="btn" id="btnConnect">🔗 Link Website Folder</button>
+        <p style="margin-top: 16px; font-size: 0.8rem; color: #444;">Requires Chrome or Edge browser</p>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="container" id="dashboard">
+        <div class="dash-header">
+            <div>
+                <h1 style="text-align:left; margin-bottom:4px;">Catalog Manager</h1>
+                <p class="subtitle" style="text-align:left; margin:0;">CoreX Admin Dashboard</p>
+            </div>
+            <div class="dash-header-actions">
+                <button class="btn btn-success" id="btnSave">💾 Save to Website</button>
+                <button class="btn" id="btnAddNew">＋ Add New Product</button>
+            </div>
+        </div>
+
+        <div class="status-bar" id="statusBar">
+            <div class="dot"></div>
+            <span id="statusText">Folder linked. Ready to edit.</span>
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <div class="cat-tabs" id="catTabs">
+            <button class="cat-tab active" data-cat="all">All Products</button>
+            <button class="cat-tab" data-cat="lamp">💡 Lamps</button>
+            <button class="cat-tab" data-cat="watch">⌚ Watches</button>
+            <button class="cat-tab" data-cat="fan">🌀 Fans</button>
+            <button class="cat-tab" data-cat="accessories">🎒 Accessories</button>
+        </div>
+
+        <div class="product-list" id="productList"></div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Add New Product</h2>
+            <form id="productForm" novalidate>
+                <input type="hidden" id="editOriginalKey">
+
+                <div class="form-group">
+                    <label>Product Name *</label>
+                    <input type="text" id="editName" placeholder="e.g. CoreX Smart Lamp" autocomplete="off">
+                    <div class="error-msg" id="errName">Product name is required.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="editCategory">
+                        <option value="lamp">💡 Lamp</option>
+                        <option value="watch">⌚ Watch</option>
+                        <option value="fan">🌀 Fan</option>
+                        <option value="accessories">🎒 Accessories</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Product ID (auto-generated from name) *</label>
+                    <input type="text" id="editKey" placeholder="e.g. corex-smart-lamp" autocomplete="off">
+                    <div class="hint">Unique key — lowercase letters and hyphens only. Auto-filled when you type the name.</div>
+                    <div class="error-msg" id="errKey">Product ID is required and must be unique.</div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Price (৳) *</label>
+                        <input type="number" id="editPrice" placeholder="e.g. 12900" min="0">
+                        <div class="error-msg" id="errPrice">Enter a valid price.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Weight (kg) *</label>
+                        <input type="number" id="editWeight" placeholder="e.g. 0.5" step="0.01" min="0">
+                        <div class="error-msg" id="errWeight">Enter a valid weight.</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Description *</label>
+                    <textarea id="editDesc" placeholder="Short product description..."></textarea>
+                    <div class="error-msg" id="errDesc">Description is required.</div>
+                </div>
+
+                <div class="form-group img-upload-box">
+                    <label>Product Image</label>
+                    <img id="imgPreview" class="img-preview" alt="Preview">
+                    <input type="text" id="editImgPath" placeholder="Image path (auto-filled on upload)" style="margin-bottom: 10px;" readonly>
+                    <input type="file" id="editImgUpload" accept="image/png, image/jpeg, image/webp, image/jpg">
+                    <div class="hint">Upload a new image to replace the current one. Saved automatically to assets/images/.</div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn" id="btnConfirm" onclick="submitProduct()">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let directoryHandle = null;
+        let productDatabase = {};
+        let activeCategory = 'all';
+
+        const authSection = document.getElementById('authSection');
+        const dashboard = document.getElementById('dashboard');
+        const productList = document.getElementById('productList');
+        const editModal = document.getElementById('editModal');
+
+        // ── Toast helper ──────────────────────────────────────────────
+        function showToast(msg, type = '') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `toast ${type}`;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // ── Link Folder ───────────────────────────────────────────────
+        document.getElementById('btnConnect').addEventListener('click', async () => {
+            try {
+                if (!window.showDirectoryPicker) {
+                    alert('Your browser does not support this feature. Please use Chrome or Edge.');
+                    return;
+                }
+                directoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+
+                try {
+                    const assetsDir = await directoryHandle.getDirectoryHandle('assets');
+                    const jsDir = await assetsDir.getDirectoryHandle('js');
+                    const fileHandle = await jsDir.getFileHandle('products.js');
+                    const file = await fileHandle.getFile();
+                    const text = await file.text();
+
+                    const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                    productDatabase = (new Function(`return ${jsonString}`))();
+
+                    authSection.style.display = 'none';
+                    dashboard.style.display = 'block';
+                    document.getElementById('statusText').textContent = `Folder linked: ${directoryHandle.name} — ${Object.keys(productDatabase).length} products loaded.`;
+                    renderProducts(activeCategory);
+
+                } catch (err) {
+                    alert('Could not find assets/js/products.js. Make sure you selected the "Ai 1" root folder.');
+                    console.error(err);
+                }
+            } catch (err) {
+                console.error('Directory picker cancelled or error:', err);
+            }
+        });
+
+        // ── Category Tab Clicks ───────────────────────────────────────
+        document.getElementById('catTabs').addEventListener('click', (e) => {
+            const tab = e.target.closest('.cat-tab');
+            if (!tab) return;
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            activeCategory = tab.dataset.cat;
+            renderProducts(activeCategory);
+        });
+
+        // ── Render Product Cards ──────────────────────────────────────
+        function renderProducts(filterCat = 'all') {
+            productList.innerHTML = '';
+            let entries = Object.entries(productDatabase);
+            if (filterCat !== 'all') {
+                entries = entries.filter(([, p]) => p.category === filterCat);
+            }
+            if (entries.length === 0) {
+                productList.innerHTML = '<p style="color:#555; grid-column: 1/-1; text-align:center; padding: 40px;">No products found. Add one!</p>';
+                return;
+            }
+            for (const [key, prod] of entries) {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <img src="${prod.img}" alt="${prod.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23111%22 width=%22100%25%22 height=%22100%25%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23444%22 font-size=%2212%22>No Image</text></svg>'">
+                    <h3>${prod.name}</h3>
+                    <div class="meta"><span class="price">${prod.price.toLocaleString()} ৳</span> &nbsp;•&nbsp; ${prod.weight_kg} kg</div>
+                    <div class="product-actions">
+                        <button class="btn" style="padding:7px 14px; font-size:0.85rem;" onclick="openEditModal('${key}')">✏️ Edit</button>
+                        <button class="btn btn-danger" style="padding:7px 14px; font-size:0.85rem;" onclick="deleteProduct('${key}')">🗑 Delete</button>
+                    </div>
+                `;
+                productList.appendChild(card);
+            }
+        }
+
+        // ── Auto-generate ID from name ────────────────────────────────
+        document.getElementById('editName').addEventListener('input', function () {
+            const keyField = document.getElementById('editKey');
+            const originalKey = document.getElementById('editOriginalKey').value;
+            // Only auto-fill if this is a new product (no original key)
+            if (!originalKey) {
+                keyField.value = this.value.trim().toLowerCase()
+                    .replace(/[^a-z0-9\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-');
+            }
+        });
+
+        // ── Image preview on file select ──────────────────────────────
+        document.getElementById('editImgUpload').addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('imgPreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                document.getElementById('editImgPath').value = `(New: ${file.name})`;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // ── Open Modal ────────────────────────────────────────────────
+        function openEditModal(key = null) {
+            // Clear errors
+            document.querySelectorAll('.error-msg').forEach(e => e.style.display = 'none');
+            document.getElementById('productForm').reset();
+            document.getElementById('imgPreview').style.display = 'none';
+            document.getElementById('imgPreview').src = '';
+
+            if (key && productDatabase[key]) {
+                const prod = productDatabase[key];
+                document.getElementById('modalTitle').textContent = '✏️ Edit Product';
+                document.getElementById('editOriginalKey').value = key;
+                document.getElementById('editKey').value = key;
+                document.getElementById('editName').value = prod.name;
+                document.getElementById('editPrice').value = prod.price;
+                document.getElementById('editWeight').value = prod.weight_kg;
+                document.getElementById('editDesc').value = prod.desc;
+                document.getElementById('editImgPath').value = prod.img || '';
+                document.getElementById('editCategory').value = prod.category || activeCategory;
+                if (prod.img) {
+                    const preview = document.getElementById('imgPreview');
+                    preview.src = prod.img;
+                    preview.style.display = 'block';
+                }
+            } else {
+                document.getElementById('modalTitle').textContent = '＋ Add New Product';
+                document.getElementById('editOriginalKey').value = '';
+                document.getElementById('editKey').value = '';
+                document.getElementById('editImgPath').value = '';
+                document.getElementById('editCategory').value = activeCategory !== 'all' ? activeCategory : 'lamp';
+            }
+            editModal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            editModal.style.display = 'none';
+        }
+
+        // ── Validate & Submit ─────────────────────────────────────────
+        async function submitProduct() {
+            let valid = true;
+
+            const name = document.getElementById('editName').value.trim();
+            const key = document.getElementById('editKey').value.trim().toLowerCase().replace(/\s+/g, '-');
+            const price = document.getElementById('editPrice').value;
+            const weight = document.getElementById('editWeight').value;
+            const desc = document.getElementById('editDesc').value.trim();
+            const originalKey = document.getElementById('editOriginalKey').value;
+
+            // Validation
+            const showErr = (id, show) => {
+                document.getElementById(id).style.display = show ? 'block' : 'none';
+            };
+
+            if (!name) { showErr('errName', true); valid = false; } else showErr('errName', false);
+            if (!key) { showErr('errKey', true); valid = false; }
+            else if (!originalKey && productDatabase[key]) {
+                document.getElementById('errKey').textContent = `ID "${key}" already exists. Choose a different ID.`;
+                showErr('errKey', true); valid = false;
+            } else showErr('errKey', false);
+            if (!price || isNaN(price) || price < 0) { showErr('errPrice', true); valid = false; } else showErr('errPrice', false);
+            if (!weight || isNaN(weight) || weight < 0) { showErr('errWeight', true); valid = false; } else showErr('errWeight', false);
+            if (!desc) { showErr('errDesc', true); valid = false; } else showErr('errDesc', false);
+
+            if (!valid) return;
+
+            const btn = document.getElementById('btnConfirm');
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
+
+            // Build product object (preserve existing specs/variant for edits)
+            const existingProd = originalKey ? productDatabase[originalKey] : null;
+            const newProd = {
+                name,
+                price: parseInt(price),
+                weight_kg: parseFloat(weight),
+                category: document.getElementById('editCategory').value,
+                desc,
+                img: document.getElementById('editImgPath').value || '',
+                variant: existingProd ? (existingProd.variant || '') : '',
+                specs: existingProd ? (existingProd.specs || []) : [{ label: 'Type', value: 'Custom Product' }]
+            };
+
+            // Handle image upload
+            const fileInput = document.getElementById('editImgUpload');
+            if (fileInput.files.length > 0 && directoryHandle) {
+                const file = fileInput.files[0];
+                const ext = file.name.split('.').pop();
+                const fileName = `${key}_${Date.now()}.${ext}`;
+                try {
+                    const assetsDir = await directoryHandle.getDirectoryHandle('assets');
+                    const imagesDir = await assetsDir.getDirectoryHandle('images', { create: true });
+                    const fileHandle = await imagesDir.getFileHandle(fileName, { create: true });
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(file);
+                    await writable.close();
+                    newProd.img = `assets/images/${fileName}`;
+                } catch (err) {
+                    console.error('Image upload error:', err);
+                    showToast('⚠️ Image upload failed. Product saved without image.', 'error');
+                }
+            }
+
+            // Save to database
+            if (originalKey && originalKey !== key) {
+                delete productDatabase[originalKey]; // rename key
+            }
+            productDatabase[key] = newProd;
+
+            btn.textContent = 'Save Product';
+            btn.disabled = false;
+            closeModal();
+            renderProducts(activeCategory);
+            showToast(`✅ "${name}" saved! Click "Save to Website" to publish.`, 'success');
+        }
+
+        // ── Delete Product ────────────────────────────────────────────
+        function deleteProduct(key) {
+            if (confirm(`Delete "${productDatabase[key].name}"? This cannot be undone until you click Save.`)) {
+                delete productDatabase[key];
+                renderProducts(activeCategory);
+                showToast('🗑 Product removed. Click "Save to Website" to publish.', '');
+            }
+        }
+
+        // ── Save All to products.js ───────────────────────────────────
+        document.getElementById('btnSave').addEventListener('click', async () => {
+            if (!directoryHandle) {
+                showToast('No folder linked!', 'error');
+                return;
+            }
+            const btn = document.getElementById('btnSave');
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
+            try {
+                const jsContent = `const productDatabase = ${JSON.stringify(productDatabase, null, 4)};\n`;
+                const assetsDir = await directoryHandle.getDirectoryHandle('assets');
+                const jsDir = await assetsDir.getDirectoryHandle('js');
+                const fileHandle = await jsDir.getFileHandle('products.js', { create: false });
+                const writable = await fileHandle.createWritable();
+                await writable.write(jsContent);
+                await writable.close();
+                showToast('✅ Website updated successfully!', 'success');
+            } catch (err) {
+                console.error('Save error:', err);
+                showToast('❌ Save failed. Please re-link the folder.', 'error');
+            }
+            btn.textContent = '💾 Save to Website';
+            btn.disabled = false;
+        });
+
+        // Add New button
+        document.getElementById('btnAddNew').addEventListener('click', () => openEditModal());
+
+        // Close modal on backdrop click
+        editModal.addEventListener('click', (e) => {
+            if (e.target === editModal) closeModal();
+        });
+    </script>
+</body>
+</html>
